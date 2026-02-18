@@ -6,12 +6,20 @@ from PySide6.QtGui import QIcon, QFont
 
 from runer import RunAssembler
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 
 class Window(QWidget):
     def __init__(self):
         super().__init__()
+        logger.info("Initializing GUI window.")
 
-        self.setWindowTitle("ASM runer")
+        self.setWindowTitle("ASM runner")
         self.resize(420, 300)
         self.setWindowIcon(QIcon(r"1658763190886.png"))
 
@@ -59,19 +67,25 @@ class Window(QWidget):
         """)
 
     def process(self):
+        logger.info("Start button clicked.")
         text: str = self.input.toPlainText()
-        text = RunAssembler().run(f"{text}\n")
+        logger.debug(f"User input:\n{text!r}")
+
+        try:
+            output = RunAssembler().run(f"{text}\n")
+            logger.info("ASM execution finished.")
+            logger.debug(f"Execution output:\n{output!r}")
+        except Exception as e:
+            logger.exception("Error during ASM execution.")
+            output = f"Error: {e}"
+
         self.output.clear()
-        self.output.append(text)
+        self.output.append(output)
 
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-)
-
-
-app = QApplication(sys.argv)
-window = Window()
-window.show()
-sys.exit(app.exec())
+if __name__ == "__main__":
+    logger.info("Starting Qt application.")
+    app = QApplication(sys.argv)
+    window = Window()
+    window.show()
+    sys.exit(app.exec())
