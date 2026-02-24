@@ -27,7 +27,7 @@ class ASMFileManager:
         if file_path:
             try:
                 with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(self.parent.output.toPlainText())
+                    f.write(self.parent.input.toPlainText())
                 logger.info(f"File saved: {file_path}")
             except Exception as e:
                 logger.error(f"Failed to save file: {e}")
