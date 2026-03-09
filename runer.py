@@ -36,6 +36,15 @@ class RunAssembler:
             logger.info("Exit syscall received. Stopping emulation.")
             uc.emu_stop()
 
+    def compile(self, asm_code: str):
+        logger.info("Starting assembly compilation (no execution).")
+        logger.debug(f"ASM code:\n{asm_code}")
+
+        encoding, count = self.ks.asm(asm_code, self.BASE_ADDR)
+        logger.debug(f"Assembly successful. Instructions count={count}")
+        logger.info("Compilation finished successfully.")
+        return bytes(encoding), count
+
     def run(self, asm_code: str):
         logger.info("Starting assembly execution.")
         logger.debug(f"ASM code:\n{asm_code}")

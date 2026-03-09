@@ -2,8 +2,8 @@ import sys
 import logging
 import os
 from PySide6.QtCore import QObject, Signal, Slot
-from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
-                               QPushButton, QTextEdit, QDialog)
+from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+                               QPushButton, QTextEdit, QDialog, QFileDialog)
 from PySide6.QtGui import QIcon, QFont
 
 from runer import RunAssembler
@@ -107,10 +107,19 @@ class Window(QWidget):
         self.input.setFont(QFont("Consolas", 11))
         layout.addWidget(self.input)
 
+        btn_row = QHBoxLayout()
+
+        self.compile_btn = QPushButton("Compile")
+        self.compile_btn.setMinimumHeight(40)
+        self.compile_btn.clicked.connect(self.compile)
+        btn_row.addWidget(self.compile_btn)
+
         self.button = QPushButton("Run")
         self.button.setMinimumHeight(40)
         self.button.clicked.connect(self.process)
-        layout.addWidget(self.button)
+        btn_row.addWidget(self.button)
+
+        layout.addLayout(btn_row)
 
         self.output = QTextEdit()
         self.output.setReadOnly(True)
@@ -126,6 +135,38 @@ class Window(QWidget):
                 self.log_window.setStyleSheet(style)
         except Exception as e:
             logger.error(f"Could not load stylesheet: {e}")
+
+    def compile(self):
+        text = self.input.toPlainText()
+        try:
+            machine_code, count = RunAssembler().compile(f"{text}\n")
+        except Exception as e:
+            self.output.setPlainText(f"Compilation error: {e}")
+            logger.exception("Compilation failed")
+            return
+
+        file_path, selected_filter = QFileDialog.getSaveFileName(
+            self, "Save compiled output", "",
+            "Binary files (*.bin);;Text files (*.txt)"
+        )
+        if not file_path:
+            return
+
+        try:
+            if selected_filter == "Text files (*.txt)":
+                hex_str = ' '.join(f'{b:02X}' for b in machine_code)
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(f"Instructions: {count}\n")
+                    f.write(f"Machine code: {hex_str}\n")
+            else:
+                with open(file_path, 'wb') as f:
+                    f.write(machine_code)
+
+            self.output.setPlainText(f"Compiled {count} instruction(s) -> {file_path}")
+            logger.info(f"Compiled output saved to {file_path}")
+        except Exception as e:
+            self.output.setPlainText(f"Error saving file: {e}")
+            logger.exception("Failed to save compiled output")
 
     def process(self):
         text = self.input.toPlainText()

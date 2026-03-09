@@ -1,0 +1,25 @@
+mov rcx, 9          
+    
+loop_start:
+    push rcx            
+
+    add rcx, 48         
+    mov [msg], cl      
+
+    mov rax, 1          
+    mov rdi, 1          
+    lea rsi, [msg]      
+    mov rdx, 2          
+    syscall
+
+    pop rcx             
+    dec rcx             
+    cmp rcx, -1         
+    jne loop_start      
+
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+msg:
+    .ascii "0\n"
